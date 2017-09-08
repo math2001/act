@@ -99,6 +99,18 @@ func updateActions(filename string, actions []Action, id int, newMessage string)
     if err != nil { log.Fatal(err) }
 }
 
+func addAction(filename string, message string, lastid int) {
+    f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0775)
+    if err != nil { log.Fatal(err) }
+    defer f.Close()
+    var buffer bytes.Buffer
+    buffer.WriteString(strconv.FormatInt(int64(lastid + 1), 10))
+    buffer.WriteString(" 0 ")
+    buffer.WriteString(message)
+    buffer.WriteString("\n")
+    buffer.WriteTo(f)
+}
+
 func main() {
     var filename string
     var edit bool
@@ -108,16 +120,27 @@ func main() {
 
     flag.Parse()
 
-    var actions = parseActions(filename)
+    actions := parseActions(filename)
+    args := flag.Args()
+    nargs := flag.NArg()
 
     if !edit {
-        renderActions(actions)
+        if nargs > 0 {
+            var id int
+            if len(actions) != 0 {
+                id = actions[len(actions)-1].Id
+            } else {
+                id = 0
+            }
+            addAction(filename, strings.Join(args, " "), id)
+        } else {
+            renderActions(actions)
+        }
     } else {
-        args := flag.Args()
         id, err := strconv.ParseInt(args[0], 10, 32)
         if err != nil { log.Fatal(err) }
         message := strings.Join(args[1:], " ")
-        updateActions(filename,actions, int(id), message)
+        updateActions(filename, actions, int(id), message)
     }
 
 }
