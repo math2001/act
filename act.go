@@ -119,10 +119,10 @@ func addAction(filename string, message string, lastid int) {
 
 func main() {
     var filename string
-    var edit bool
+    var editId int
 
     flag.StringVar(&filename, "file", "./act", "A path the file to store tasks")
-    flag.BoolVar(&edit, "e", false, "Edit action")
+    flag.IntVar(&editId, "e", -1, "Action id you want to edit")
 
     flag.Parse()
 
@@ -130,7 +130,7 @@ func main() {
     args := flag.Args()
     nargs := flag.NArg()
 
-    if !edit {
+    if editId == -1 {
         if nargs > 0 {
             var id int
             if len(actions) != 0 {
@@ -143,10 +143,8 @@ func main() {
             renderActions(actions)
         }
     } else {
-        id, err := strconv.ParseInt(args[0], 10, 32)
-        if err != nil { log.Fatal(err) }
-        message := strings.Join(args[1:], " ")
-        updateActions(filename, actions, int(id), message)
+        message := strings.Join(args, " ")
+        updateActions(filename, actions, int(editId), message)
     }
 
 }
