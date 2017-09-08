@@ -72,7 +72,7 @@ func parseActions(filename string) []Action {
     return actions
 }
 
-func renderActions(actions []Action) {
+func listActions(actions []Action) {
     var isTerminal bool = terminal.IsTerminal(int(os.Stdout.Fd()))
     for _, action := range actions {
         if action.Done == "0" {
@@ -85,11 +85,12 @@ func renderActions(actions []Action) {
     }
 }
 
-func updateActions(filename string, actions []Action, id int, newMessage string) {
+func updateActions(filename string, actions []Action, id int, newStatus string, newMessage string) {
     var buffer bytes.Buffer
     for _, action := range actions {
         if action.Id == id {
-            action.Message = newMessage
+            if newMessage != "" { action.Message = newMessage }
+            if newStatus != "" { action.Done = newStatus }
         }
         buffer.WriteString(strconv.FormatInt(int64(action.Id), 10))
         buffer.WriteString(" ")
@@ -118,11 +119,14 @@ func addAction(filename string, message string, lastid int) {
 }
 
 func main() {
-    var filename string
-    var editId int
+    var (
+        filename string
+        editId, finishedId int
+    )
 
     flag.StringVar(&filename, "file", "./act", "A path the file to store tasks")
     flag.IntVar(&editId, "e", -1, "Action id you want to edit")
+    flag.IntVar(&finishedId, "f", -1, "Action id you have finished")
 
     flag.Parse()
 
@@ -130,21 +134,25 @@ func main() {
     args := flag.Args()
     nargs := flag.NArg()
 
-    if editId == -1 {
-        if nargs > 0 {
-            var id int
-            if len(actions) != 0 {
-                id = actions[len(actions)-1].Id
-            } else {
-                id = 0
-            }
-            addAction(filename, strings.Join(args, " "), id)
-        } else {
-            renderActions(actions)
-        }
-    } else {
+    if editId != -1 && finishedId != -1 {
+        log.Fatal("Calm down. One thing at a time. (Shouldn't have both -e and -f)")
+    }
+
+    if editId != -1 {
         message := strings.Join(args, " ")
-        updateActions(filename, actions, int(editId), message)
+        updateActions(filename, actions, editId, "", message)
+    } else if finishedId != -1 {
+        updateActions(filename, actions, finishedId, "1", "")
+    } else if nargs > 0 {
+        var id int
+        if len(actions) != 0 {
+            id = actions[len(actions)-1].Id
+        } else {
+            id = 0
+        }
+        addAction(filename, strings.Join(args, " "), id)
+    } else {
+        listActions(actions)
     }
 
 }
