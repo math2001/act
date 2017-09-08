@@ -9,6 +9,7 @@ import (
     "strings"
     "strconv"
     "bytes"
+    "golang.org/x/crypto/ssh/terminal"
 )
 
 /*
@@ -72,9 +73,14 @@ func parseActions(filename string) []Action {
 }
 
 func renderActions(actions []Action) {
+    var isTerminal bool = terminal.IsTerminal(int(os.Stdout.Fd()))
     for _, action := range actions {
         if action.Done == "0" {
-            fmt.Printf("%d %s\n", action.Id, action.Message)
+            if isTerminal {
+                fmt.Printf("\033[0;30m%d\033[0m %s\n", action.Id, action.Message)
+            } else {
+                fmt.Printf("%d %s\n", action.Id, action.Message)
+            }
         }
     }
 }
