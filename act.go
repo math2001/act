@@ -12,25 +12,21 @@ import (
     "golang.org/x/crypto/ssh/terminal"
 )
 
-/*
-
-Usage:
-
-$ alias act="act -file=~/act"
-
-$ act Go for a run
-$ act Fix #12
-$ act
-2 Go for a run
-7 Fix #12
-$ act -e 7 Fix #11
-$ act
-2 Go for a run
-7 Fix #11
-
-$ alias todo="act -file=./act"
-
-*/
+const EXAMPLE_USAGE = `
+  [~] $ alias act="act -file=~/acts"
+  [~] $ act Fix #12
+  [~] $ act Improve help message
+  [~] $ act
+  1 Fix #12
+  2 Improve help message
+  [~] $ act -e=2 [CLI] Improve help message
+  [~] $ act
+  1 Fix #12
+  2 [CLI] Improve help message
+  [~] $ act -f=2
+  [~] $ act
+  1 Fix #12
+`
 
 type Action struct {
     Id int
@@ -124,7 +120,20 @@ func main() {
         editId, finishedId int
     )
 
-    flag.StringVar(&filename, "file", "./act", "A path the file to store tasks")
+    flag.Usage = func () {
+        fmt.Fprintln(os.Stderr, "$ act")
+        fmt.Fprintln(os.Stderr, "=====\n")
+        fmt.Fprintln(os.Stderr, "  A very simple CLI todo manager by math2001")
+        fmt.Fprintln(os.Stderr, "  Hugely inspired by Steve Losh's t (Python)")
+        fmt.Fprintln(os.Stderr, "\nUsage")
+        fmt.Fprintln(os.Stderr, "-----\n")
+        flag.PrintDefaults()
+        fmt.Fprintln(os.Stderr, "\nExample")
+        fmt.Fprintln(os.Stderr, "-------")
+        fmt.Fprintln(os.Stderr, EXAMPLE_USAGE)
+    }
+
+    flag.StringVar(&filename, "file", "./acts", "A path the file to store tasks")
     flag.IntVar(&editId, "e", -1, "Action id you want to edit")
     flag.IntVar(&finishedId, "f", -1, "Action id you have finished")
 
